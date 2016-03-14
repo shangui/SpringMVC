@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:tx="http://www.springframework.org/schema/tx" xmlns:context="http://www.springframework.org/schema/context" xsi:schemaLocation="
+http://www.springframework.org/schema/beans
+http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+http://www.springframework.org/schema/context
+http://www.springframework.org/schema/context/spring-context-3.0.xsd
+http://www.springframework.org/schema/tx
+http://www.springframework.org/schema/tx/spring-tx-3.0.xsd">
+
+	<!-- XML配置一个定时任务 -->
+    <bean id="latest" class="onesun.quartz.AssessmentQuartzJob"></bean>
+	<!-- 注解直接注入也可 -->
+	<context:component-scan base-package="onesun.quartz" />
+
+	<!-- Job的配置开始.这一系列任务的调度方法全部都是work -->
+	<bean id="jobDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject" ref="latest"></property>
+		<property name="targetMethod" value="work" />
+		<!-- 禁止并发执行 -->
+		<property name="concurrent" value="false" />
+	</bean>
+	<!-- 调度的配置开始 -->
+	<bean id="cronTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+		<property name="jobDetail" ref="jobDetail" />
+		<!-- 每20分钟触发一次 -->
+		<property name="cronExpression" value="0 1/20 * * * ?"/>
+	</bean>														
+	
+	<!-- 启动触发器的配置开始，一般以执行频率来区分任务比较合适 -->
+	<bean id="schedulerFactory" class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+		<property name="triggers">
+			<list>
+				<ref bean="cronTrigger" />
+			</list>
+		</property>
+	</bean>
+</beans>
